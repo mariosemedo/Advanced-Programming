@@ -81,7 +81,11 @@ public class Player implements Comparable<Player>{
 
     public void setVotedStock(String stock){
         votedStock.add(stock.toLowerCase());
+
+        System.out.println();
     }
+
+
 
 
     public void resetPlayer(){
