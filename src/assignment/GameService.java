@@ -3,6 +3,7 @@ package assignment;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.Iterator;
 import java.util.Scanner;
@@ -21,7 +22,6 @@ public class GameService implements Runnable {
     PrintWriter out;
     Scanner in;
     Game game;
-    final static CyclicBarrier barrier = new CyclicBarrier(2);
     Boolean newRound;
     int round;
 
@@ -43,18 +43,12 @@ public class GameService implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
-
 
     @Override
     public void run() {
-
         login();
-
-        waitForOtherPLayers(); // 1 minute timeout
-
+        waitForOtherPLayers();// 1 minute timeout
 
     }
 
@@ -64,11 +58,10 @@ public class GameService implements Runnable {
         try {
 
             if (game.numberOfPlayers < 4) {
-
                 out.println("Please enter your name: ");
                 String input = in.nextLine().trim();
                 player.name = input;
-                game.playersConnected.add(player);
+                game.connectedPlayers.add(player);
 
                 /*
 
@@ -91,11 +84,18 @@ public class GameService implements Runnable {
     }
 
 
-    public void roundDisplay() {
+    public synchronized void roundDisplay() {
+
+
+        if (round < 1) {
+            Game.botClient.addBot();
+
+        }
         round++;
         out.println("ROUND " + round + "\n");
         Iterator<Stock> it = game.stockArrayList.iterator();
-        Iterator<Player> it2 = game.playersConnected.iterator();
+        Iterator<Player> it2 = game.connectedPlayers.iterator();
+
 
         if(round > 1){
             roundReset();
@@ -103,8 +103,6 @@ public class GameService implements Runnable {
         if (round > 5) {
             gameOver();
         }else {
-
-
             while (it.hasNext()) {
                 Stock stock = it.next();
 
@@ -115,6 +113,9 @@ public class GameService implements Runnable {
                 out.println();
                 out.println(player);
             }
+            if(round >= 1) {
+                Game.playBots();
+            }
 
             roundInfo();
         }
@@ -123,28 +124,30 @@ public class GameService implements Runnable {
 
     public void roundInfo() {
 
+
         String chooseInfo = "\nType in the following COMMANDS...\n\n" +
                 "SELL to sell your shares to the stock market\n" +
                 "BUY to buy shares of current stocks\n" +
                 "VOTE to cast your vote in favour or against an influence card\n" +
                 "READY to move to the next round\n";
 
+        System.out.println(game.getConnectedPlayers());
         out.println(chooseInfo);
-
         String nextInput = in.next();
         setCommand(nextInput);
         out.println();
     }
 
-    public void roundReset(){
+    public synchronized void roundReset(){
 
         game.useInfluenceCards();
         player.resetPlayer();
+        Game.resetBots();
     }
 
     public void gameOver(){
 
-        // CALL WINNER METHOD
+        out.println("The winner is: " + game.getWinner().name + " with £" + game.getWinner().getTotalCash());
 
         try {
             out.println("END");
@@ -154,8 +157,6 @@ public class GameService implements Runnable {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-
     }
 
 
@@ -211,18 +212,6 @@ public class GameService implements Runnable {
         }
     }
 
-    public void vote(Stock stock, String vote) {
-
-        if (player.hasVotes() && !player.votedStock.contains(stock.name.toLowerCase())) {
-
-            stock.vote(vote);
-            player.setVotedStock(stock.name); // adds stock to the list of voted stock for this round
-            player.votes = player.votes - 1; // takes one vote from player
-
-        }
-    }
-
-
     public void setCommand(String command) {
 
         command = command.toUpperCase();
@@ -256,7 +245,9 @@ public class GameService implements Runnable {
     public void waitForOtherPLayers() {
 
         try {
-            barrier.await(1000, TimeUnit.SECONDS);
+
+            game.barrier.await(1000, TimeUnit.SECONDS);
+
             roundDisplay();
 
         } catch (InterruptedException e) {
@@ -306,7 +297,7 @@ public class GameService implements Runnable {
                     if(!player.hasVotedForStock(game.stockArrayList.get(stock-1).name)) {
                         out.println("Please vote YES or NO for " + game.stockArrayList.get(stock - 1).name);
                         String choice = in.next();
-                        vote(game.stockArrayList.get(stock - 1), choice);
+                        game.vote(game.stockArrayList.get(stock - 1), choice, player);
                         roundInfo();
                     }
                     else {

@@ -17,7 +17,7 @@ public class TomcatServer implements Runnable {
 
     public static final int TOMCAT_PORT = 8080;
     public static final String EXAMPLES_URL = "http://localhost:8080/examples/rest";
-    public static final String HELLO_URL = EXAMPLES_URL + "/bot";
+    public static final String BOT_URL = EXAMPLES_URL + "/bot";
 
 
     TomcatServer(){
@@ -36,7 +36,7 @@ public class TomcatServer implements Runnable {
         config.register(GsonMessageBodyHandler.class);
         // Enable logging for debugging purposes
         // Comment out next line to turn off logging
-        config.property(LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL, "INFO");
+        //config.property(LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL, "INFO");
         // Tomcat configuration
         Tomcat tomcat = new Tomcat();
         tomcat.setPort(TOMCAT_PORT);

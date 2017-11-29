@@ -1,20 +1,23 @@
 package assignment;
 
-import java.util.AbstractCollection;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Scanner;
+import java.util.*;
+import java.util.concurrent.CyclicBarrier;
 
 /**
  * Created by mariooliveira on 01/11/2017.
  */
+
 public class Game {
 
-    Stock apple, bp, cisco, dell, ericsson;
-    ArrayList <Stock> stockArrayList;
-    static ArrayList <Player> playersConnected;
-    Player player;
+    static Stock apple, bp, cisco, dell, ericsson;
+    static ArrayList <Stock> stockArrayList;
+    static ArrayList <Player> connectedPlayers;
+    // Player player;
     int numberOfPlayers;
+    final static CyclicBarrier barrier = new CyclicBarrier(2);
+    static BotClient botClient = new BotClient();
+    static int botID = 0;
+    static String firstPlayer = "";
 
 
     Game(){
@@ -24,7 +27,7 @@ public class Game {
         cisco = new Stock("Cisco", 100);
         dell = new Stock("Dell", 100);
         ericsson = new Stock("Ericsson", 100);
-        playersConnected = new ArrayList<>();
+        connectedPlayers = new ArrayList<>();
 
         getShares();
 
@@ -48,6 +51,18 @@ public class Game {
 
         return currentSharePrices;
     }
+
+    public Player getWinner(){
+
+        System.out.println(connectedPlayers);
+
+        Collections.sort(connectedPlayers);
+
+        System.out.println(connectedPlayers);
+
+        return connectedPlayers.get(0);
+    }
+
 
     public ArrayList getInfluenceCards(){
 
@@ -83,9 +98,50 @@ public class Game {
             stockArrayList.set(i,stock);
             i++;
         }
-
     }
 
+    public ArrayList<Player> getConnectedPlayers (){
+
+        return connectedPlayers;
+    }
+
+
+
+    public static void vote(Stock stock, String vote, Player player) {
+
+        if (player.hasVotes() && !player.votedStock.contains(stock.name.toLowerCase())) {
+
+            stock.vote(vote);
+            player.setVotedStock(stock.name); // adds stock to the list of voted stock for this round
+            player.votes = player.votes - 1; // takes one vote from player
+
+        }
+    }
+
+    public static void botVote(Stock stock, int vote){
+
+
+}
+
+    public static void playBots(){
+
+        Random rn = new Random();
+        int choice = rn.nextInt(3);
+
+        switch (choice){
+            case 0:
+                botClient.castVote();
+            case 1:
+                botClient.buy();
+            case 2:
+                botClient.sell();
+        }
+    }
+
+    public static void resetBots()
+    {
+        botClient.reset();
+    }
     public static void main(String[] args) {
 
         Game game = new Game();
@@ -158,7 +214,6 @@ public class Game {
                     break;
                 }
             }
-
         }*/
 
     }

@@ -7,7 +7,7 @@ import java.util.Random;
  * Created by mariooliveira on 01/11/2017.
  */
 
-public class Player {
+public class Player implements Comparable<Player>{
 
     String name;
     ArrayList<Integer> shares;
@@ -32,7 +32,9 @@ public class Player {
 
     }
 
-
+    /**
+     * Randomly allocates 10 shares between 5 stocks
+     */
     private void allocateShares(){
 
         shares = new ArrayList<>();
@@ -40,19 +42,33 @@ public class Player {
         int numberOfShares = 10;
 
         for (int i = 0; i < 4; i++) {
+            // Random absolute value between 0 and number of available shares
             int share = Math.abs(rdm.nextInt(numberOfShares));
             shares.add(i, share);
             numberOfShares = numberOfShares-share;
-            //System.out.println(numberOfShares + " " +  share);
 
+            //Allocate all the remaining shares to the last stock if there are any shares left
             if(i == 3 && numberOfShares > 0){
                 shares.add(i, numberOfShares);
             }
         }
     }
 
+
     public int getMoney() {
         return money;
+    }
+
+    public int getTotalCash(){
+
+        int cash = getMoney();
+        int i = 0;
+
+        for (int share: shares) {
+
+            cash = cash + Game.stockArrayList.get(i).getPrice() * share;
+        }
+        return cash;
     }
 
     public ArrayList<Integer> showShares() {
@@ -66,6 +82,7 @@ public class Player {
     public void setVotedStock(String stock){
         votedStock.add(stock.toLowerCase());
     }
+
 
     public void resetPlayer(){
         votes = 2;
@@ -99,4 +116,14 @@ public class Player {
 
     }
 
+    @Override
+    public int compareTo(Player o) {
+        if(getTotalCash() > o.getTotalCash()){
+            return -1;
+        }
+        else if(getTotalCash() < o.getTotalCash()) {
+            return 1;
+        }
+        return 0;
+    }
 }

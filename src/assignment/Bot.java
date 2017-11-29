@@ -1,42 +1,67 @@
 package assignment;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
+import java.util.Map;
+import java.util.Random;
+import java.util.RandomAccess;
 
 /**
- * Created by mariooliveira on 15/11/2017.
+ * Created by mariooliveira on 29/11/2017.
  */
+public class Bot extends Player{
 
 
+    Bot(String name){
+        super(name);
 
-@Path("/bot")
-public class Bot {
-
-    @GET
-    @Path("/{name}")
-    @Produces(MediaType.TEXT_PLAIN)
-    public String helloPlain(@PathParam("name") String name) {
-
-        return "Hello, " + name + "!";
     }
 
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public String helloJson(@QueryParam("name") String name) {
-        return "{\"hello\":\"" + name + "\"}";
+    public void castVote(){
+
+        Random rn = new Random();
+        int stock = rn.nextInt(5);
+
+        Game.vote(Game.stockArrayList.get(stock), "YES", this);
+
+        System.out.println(name + " voted for " + Game.stockArrayList.get(stock).name + ".");
+        System.out.println(hasVotes());
     }
 
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    public String helloPost(String name) {
-        return "{\"hello\":\"" + name +"\"}";
+    public void buy(){
+
+
+        Random rn = new Random();
+        int stock = rn.nextInt(5);
+        int moneyAvailable = getMoney();
+        int currentShares = getShares(stock);
+        int stockPriceAndFee = Game.stockArrayList.get(stock).getPrice() + 3;
+        int sharesToBuy = moneyAvailable / stockPriceAndFee ;
+
+        if(moneyAvailable - sharesToBuy * Game.stockArrayList.get(stock).getPrice() + 3 >= 0){
+            money = moneyAvailable - 3 - sharesToBuy * Game.stockArrayList.get(stock).getPrice();
+            shares.set(stock, sharesToBuy + currentShares);
+            }
+
     }
 
-    @POST
-    @Path("/form")
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public String helloForm(@FormParam ("name") String name) {
-        return "{\"hello\":\"" + name +"\"}";
+
+    public void sell() {
+
+        if (transactions > 0) {
+
+            Random rn = new Random();
+            Random rn2 = new Random();
+            int stock = rn.nextInt(5);
+            //System.out.println(name+" "+ stock);
+            int sharesAvaliable = getShares(stock);
+            if (sharesAvaliable > 0) {
+                int sharesToSell = 1;
+                if (sharesAvaliable >= sharesToSell) {
+                    super.shares.set(stock, sharesAvaliable - sharesToSell);
+                    super.money = getMoney() + sharesToSell * Game.stockArrayList.get(stock).getPrice();
+                }
+            }
+        }
     }
+
 
 }
